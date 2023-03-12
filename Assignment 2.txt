@@ -1,0 +1,18 @@
+// Define the periods and rates for each task
+#define TASK1_PERIOD 4000   // Period = 4ms, Rate = 250Hz
+
+// Define global variables for tasks
+volatile bool task1_done = false;
+
+// Define the tasks as functions with no arguments
+void task1() 
+{
+  // Output a digital signal
+  digitalWrite(OUTPUT_PIN, HIGH);
+  delayMicroseconds(200);
+  digitalWrite(OUTPUT_PIN, LOW);
+  delayMicroseconds(50);
+  digitalWrite(OUTPUT_PIN, HIGH);
+  delayMicroseconds(30);
+  task1_done = true;
+}
