@@ -1,30 +1,116 @@
-// Define the periods and rates for each task
-#define TASK1_PERIOD 4000   // Period = 4ms, Rate = 250Hz
 
-// Define global variables for tasks
-volatile bool task1_done = false;
+#include <Ticker.h>
+#define INPUT_PIN 2  //input pin for frequency 1 (task2)
+#define INPUT_PIN 8 // input pin for frequency 2 (task3)
+#define LED_PIN1 18 //  led pin for task 1 
+#define ANALOG_PIN 4 // pin for task 4 
+#define FILTER_LENGTH 4 // Number of samples to average in task 4
+#define MAX_RANGE 3.3 // Maximum voltage for the analog input in task 4
+#define LED_PIN2 19 //  led pin for task 4
 
-// Define the tasks as functions with no arguments
-void task1() 
-{
-  // Output a digital signal
-  digitalWrite(OUTPUT_PIN, HIGH);
-  delayMicroseconds(200);
-  digitalWrite(OUTPUT_PIN, LOW);
-  delayMicroseconds(50);
-  digitalWrite(OUTPUT_PIN, HIGH);
-  delayMicroseconds(30);
-  task1_done = true;
-}
-//Task 2
-#define INPUT_PIN 2  // Pin connected to the input signal
+#include <B31DGMonitor.h>  
+B31DGCyclicExecutiveMonitor monitor;
+#define FRAME_DURATION_MS 4     // 4ms
+
+Ticker frameTicker;
+unsigned long frameTime = 0;
+unsigned long frameCounter = 0;
+
+float frequencycheck1; // for task 2 (to log frequency1)
+float frequencycheck2; // for task 3 (to log frequency2)
+float analog_samples[FILTER_LENGTH] = {0}; // creating an array for task 4 and intiallizing it to 0 
+int sample_index = 0; // initial value for samples in task 4 
 
 void setup() {
-  Serial.begin(9600);
+  pinMode(INPUT_PIN , INPUT); // input pin for frequency 1
+  pinMode(INPUT_PIN, INPUT); // input pin for frequency 2
+  pinMode(LED_PIN1 , OUTPUT); // output pin for led1
+  pinMode(LED_PIN2 , OUTPUT); // output pin for led2 
+  Serial.begin(9600);        // baud rate  
+  Serial.println("Ready");
+  monitor.startMonitoring(); 
+  frameTicker.attach_ms(FRAME_DURATION_MS, frame);
+ 
 }
 
-void loop() {
-  // Measure the pulse width
+
+void frame() {
+   
+   unsigned int slot = frameCounter % 40;
+
+   switch (slot) {
+     case 0:  task1();  task2();                                       break;
+     case 1:  task1();                        task4();                 break;
+     case 2:  task1();             task3();                            break;
+     case 3:  task1();                                                 break;
+     case 4:  task1();             task3();                            break;
+     case 5:  task1();  task2();                                       break;
+     case 6:  task1();             task3();                            break;
+     case 7:  task1();                        task4();                 break;
+     case 8:  task1();             task3();                            break;
+     case 9:  task1();             task3();                            break;
+     case 10: task1();  task2();                                       break;
+     case 11: task1();                        task4();                 break;
+     case 12: task1();             task3();                            break;
+     case 13: task1();                                   task5();      break;
+     case 14: task1();             task3();                            break;
+     case 15: task1();  task2();                                       break;
+     case 16: task1();             task3();                            break;
+     case 17: task1();                        task4();                 break;
+     case 19: task1();             task3();                            break;
+     case 18: task1();             task3();                            break;
+     case 20: task1();  task2();                                       break;
+     case 21: task1();                                                 break;
+     case 22: task1();             task3();                            break;
+     case 23: task1();                        task4();                 break;
+     case 24: task1();             task3();                            break;
+     case 25: task1();  task2();                                       break;
+     case 26: task1();             task3();                            break;
+     case 27: task1();                        task4();                 break;
+     case 28: task1();             task3();                            break;
+     case 29: task1();             task3();                            break;
+     case 30: task1();  task2();                                       break;
+     case 31: task1();                                                 break;
+     case 32: task1();             task3();                            break;
+     case 33: task1();                        task4();                 break;
+     case 34: task1();             task3();                            break;
+     case 35: task1();  task2();                                       break;
+     case 36: task1();             task3();                            break;
+     case 37: task1();                        task4();                 break;
+     case 38: task1();             task3();                            break;
+     case 39: task1();             task3();                            break;
+     case 40: task1();  task2();                                       break;
+    
+
+
+  }
+     frameCounter++;
+  
+}
+
+
+// task1 
+void task1() 
+{
+    monitor.jobStarted(1); // Notify the monitor that this task has started
+
+    digitalWrite(LED_PIN1, HIGH); // Turn on the LED connected to LED_PIN1
+    delayMicroseconds(200); // Delay for 200 microseconds
+
+    digitalWrite(LED_PIN1, LOW); // Turn off the LED
+    delayMicroseconds(50); // Delay for 50 microseconds
+
+    digitalWrite(LED_PIN1, HIGH); // Turn on the LED again
+    delayMicroseconds(30); // Delay for 30 microseconds
+
+    monitor.jobEnded(1); // Notify the monitor that this task has ended
+}
+
+
+void task2() //worst case implementation of task1 is 1865 approx 2 ms
+{
+  monitor.jobStarted(2);
+  // Measure the pulse width of the signal connected to INPUT_PIN for task2
   uint32_t pulse_width = pulseIn(INPUT_PIN, HIGH);
 
   // Compute the frequency of the pulse
@@ -32,28 +118,26 @@ void loop() {
   float frequency = 1000.0 / period;
 
   // Scale the frequency
-  if (frequency < 333) {
-    frequency = 0;
+  if (frequency >= 333 && frequency <= 1000) {
+    // If the frequency is within the valid range, print it to the serial monitor
+    Serial.print("FREQUENCY: ");
+    Serial.print(frequency, 2); // Limit to 2 decimal places
+    Serial.println(" Hz");
+  } else {
+    // If the frequency is not within the valid range, print an error message to the serial monitor
+    Serial.println("Signal frequency out of range");
   }
 
-  // Print the frequency
-  Serial.print("FREQUENCY: ");
-  Serial.println(frequency);
+  // Store the measured frequency in the global variable frequencycheck1 for task 5
+  frequencycheck1=frequency;
+  monitor.jobEnded(2);
+} 
 
-  // Wait for 20ms before taking the next reading
-  delay(20);
-}
 
-//task3
-#define INPUT_PIN 2  // Pin connected to the input signal
-#define MEASURE_INTERVAL 8 // Measurement interval in milliseconds
-
-void setup() {
-  Serial.begin(9600);
-}
-
-void loop() {
-  // Measure the pulse width
+void task3() //worst case implementation of task1 is 1983 approx 2 ms
+ {
+  monitor.jobStarted(3);
+// Measure the pulse width of the signal connected to INPUT_PIN for task3
   uint32_t pulse_width = pulseIn(INPUT_PIN, HIGH);
 
   // Compute the frequency of the pulse
@@ -62,15 +146,101 @@ void loop() {
 
   // Scale the frequency
   if (frequency >= 500 && frequency <= 1000) {
-    // Print the frequency
+    // If the frequency is within the valid range, print it to the serial monitor
     Serial.print("FREQUENCY: ");
     Serial.print(frequency, 2); // Limit to 2 decimal places
     Serial.println(" Hz");
-
   } else {
+    // If the frequency is not within the valid range, print an error message to the serial monitor
     Serial.println("Signal frequency out of range");
   }
 
-  // Wait for the measurement interval
-  delay(MEASURE_INTERVAL);
+  // Store the measured frequency in the global variable frequencycheck2
+  frequencycheck2=frequency; 
+ monitor.jobEnded(3);
 }
+
+
+void task4() //worst case implementation of task1 is 200 approx 0.2 ms
+{
+ monitor.jobStarted(4);  
+  unsigned long start_time = micros(); // Record the start time of the task
+  float analog_in = analogRead(ANALOG_PIN) * ( 3.3/ 1023.0); // Convert analog value to voltage
+  
+  // Compute the filtered analog value by averaging the last FILTER_LENGTH readings
+  analog_samples[sample_index] = analog_in; // Store the latest analog reading in the array
+  sample_index = (sample_index + 1) % FILTER_LENGTH; // Update the index for the next reading
+  float sum = 0;
+  for (int i = 0; i < FILTER_LENGTH; i++) { // Sum up all the samples in the array
+    sum += analog_samples[i];
+  }
+  float average_analog_in = sum / FILTER_LENGTH; // Compute the average of the last FILTER_LENGTH readings
+  
+  // Check if the average analog input is greater than half of the maximum voltage range
+  if (average_analog_in > 3.3 / 2.0) {
+    digitalWrite(LED_PIN2, HIGH); // Turn on the LED to visualize error
+  }
+  else {
+    digitalWrite(LED_PIN2, LOW); // Turn off the LED if no error
+  }
+  
+  // Print the filtered analog value to the serial monitor
+  Serial.print("Filtered Analog Input: ");
+  Serial.println(average_analog_in);
+  unsigned long end_time = micros(); // Recordthe end time of the task
+  unsigned long execution_time = end_time - start_time; // Compute the execution time of the task
+  
+  Serial.print("Execution time: ");
+  Serial.print(execution_time);
+  Serial.println(" microseconds");
+  delay(500); // Add a delay to prevent spamming the serial monitor
+  monitor.jobEnded(4);
+  
+}
+
+
+void task5(){
+monitor.jobStarted(5);
+// for frequency1 
+{
+if (frequencycheck1 <=333 ){  // using frequencycheck1 to get value from frequency in task2 
+  Serial.println((String)"Frequency value measured by Task 2:(0,0)");;
+  }
+else if (frequencycheck1>=1000 ){
+    Serial.println((String)"Frequency value measured by Task 2:(99,99)");
+  }
+else {
+  float frq1 = (frequencycheck1 / 10); // scaled frequency to 2 digits between 0 to 99 
+  Serial.println((String)"Frequency value measured by Task 2:("+frq1+" HZ,"+frq1+ ")");  
+}
+
+//for frequency2 
+if (frequencycheck2 <=500 ){ // using frequencycheck2 to get value from frequency in task3
+  Serial.println((String)"Frequency value measured by Task 3:(0,0)");;
+  }
+else if (frequencycheck2>=1000 ){
+    Serial.println((String)"Frequency value measured by Task 3:(99,99)");
+  }
+else {
+  float frq2 = (frequencycheck2 / 10); // scaled frequency to 2 digits between 0 to 99 
+  Serial.println((String)"Frequency value measured by Task 3:("+frq2+" HZ,"+frq2+ ")");  
+}
+monitor.jobEnded(5);
+ }}
+
+
+void loop() {}
+  // task1(); //calls task1 that are currently commented out
+  // task2(); //calls task2 that are currently commented out
+  // task3(); //calls task3 that are currently commented out
+  // task4(); //calls task4 that are currently commented out
+  // task5(); //calls task5 that are currently commented out
+  // unsigned long start_time = micros(); //record the start time of a particular task.
+  // task3(); //measure execution time.
+  // unsigned long end_time = micros(); 
+  //  unsigned long execution_time = end_time - start_time; //Subtracts the start time from the end time to calculate the execution time of the task in microseconds
+  //  Serial.print("Execution time: ");
+  // Serial.print(execution_time);
+  // Serial.println(" microseconds"); 
+  // delay(30); //add delay of 30ms
+  
