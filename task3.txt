@@ -1,0 +1,25 @@
+void task3() //worst case implementation of task1 is 1983 approx 2 ms
+ {
+  monitor.jobStarted(3);
+// Measure the pulse width of the signal connected to INPUT_PIN for task3
+  uint32_t pulse_width = pulseIn(INPUT_PIN, HIGH);
+
+  // Compute the frequency of the pulse
+  float period = 2 * pulse_width / 1000.0;
+  float frequency = 1000.0 / period;
+
+  // Scale the frequency
+  if (frequency >= 500 && frequency <= 1000) {
+    // If the frequency is within the valid range, print it to the serial monitor
+    Serial.print("FREQUENCY: ");
+    Serial.print(frequency, 2); // Limit to 2 decimal places
+    Serial.println(" Hz");
+  } else {
+    // If the frequency is not within the valid range, print an error message to the serial monitor
+    Serial.println("Signal frequency out of range");
+  }
+
+  // Store the measured frequency in the global variable frequencycheck2
+  frequencycheck2=frequency; 
+ monitor.jobEnded(3);
+}

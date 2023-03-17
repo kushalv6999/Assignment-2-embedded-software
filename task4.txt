@@ -1,0 +1,36 @@
+void task4() //worst case implementation of task1 is 200 approx 0.2 ms
+{
+ monitor.jobStarted(4);  
+  unsigned long start_time = micros(); // Record the start time of the task
+  float analog_in = analogRead(ANALOG_PIN) * ( 3.3/ 1023.0); // Convert analog value to voltage
+  
+  // Compute the filtered analog value by averaging the last FILTER_LENGTH readings
+  analog_samples[sample_index] = analog_in; // Store the latest analog reading in the array
+  sample_index = (sample_index + 1) % FILTER_LENGTH; // Update the index for the next reading
+  float sum = 0;
+  for (int i = 0; i < FILTER_LENGTH; i++) { // Sum up all the samples in the array
+    sum += analog_samples[i];
+  }
+  float average_analog_in = sum / FILTER_LENGTH; // Compute the average of the last FILTER_LENGTH readings
+  
+  // Check if the average analog input is greater than half of the maximum voltage range
+  if (average_analog_in > 3.3 / 2.0) {
+    digitalWrite(LED_PIN2, HIGH); // Turn on the LED to visualize error
+  }
+  else {
+    digitalWrite(LED_PIN2, LOW); // Turn off the LED if no error
+  }
+  
+  // Print the filtered analog value to the serial monitor
+  Serial.print("Filtered Analog Input: ");
+  Serial.println(average_analog_in);
+  unsigned long end_time = micros(); // Recordthe end time of the task
+  unsigned long execution_time = end_time - start_time; // Compute the execution time of the task
+  
+  Serial.print("Execution time: ");
+  Serial.print(execution_time);
+  Serial.println(" microseconds");
+  delay(500); // Add a delay to prevent spamming the serial monitor
+  monitor.jobEnded(4);
+  
+}

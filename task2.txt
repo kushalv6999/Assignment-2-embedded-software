@@ -1,0 +1,27 @@
+#define INPUT_PIN 8  // Pin connected to the input signal
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Measure the pulse width
+  uint32_t pulse_width = pulseIn(INPUT_PIN, HIGH);
+
+  // Compute the frequency of the pulse
+  float period = 2 * pulse_width / 1000.0;
+  float frequency = 1000.0 / period;
+
+  // Scale the frequency
+   if (frequency >= 500 && frequency <= 1000) {
+
+  // Print the frequency
+    Serial.print("FREQUENCY: ");
+    Serial.print(frequency, 2); // Limit to 2 decimal places
+    Serial.println(" Hz");
+} else {
+    Serial.println("Signal frequency out of range");
+  }
+  // Wait for 8ms before taking the next reading
+  delay(8);
+}

@@ -1,0 +1,40 @@
+// Define the pin connected to the LED
+const int LED_PIN = 18;
+
+// Define the time intervals for the LED pattern
+const unsigned long HIGH_DURATION = 200;  // Duration for LED to be high (in microseconds)
+const unsigned long LOW_DURATION = 50;    // Duration for LED to be low (in microseconds)
+const unsigned long SECOND_HIGH_DURATION = 30;  // Duration for the second high state (in microseconds)
+const unsigned long PERIOD = 4000;       // Total cycle time (in microseconds)
+const unsigned long RATE = 250;          // Frequency of the cycle (in Hertz)
+
+void setup() {
+  // Set the LED pin as an output
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  // Record the start time of the cycle
+  unsigned long cycleStart = micros();
+
+  // Set the LED HIGH for the specified duration
+  digitalWrite(LED_PIN, HIGH);
+  delayMicroseconds(HIGH_DURATION);
+
+  // Set the LED LOW for the specified duration
+  digitalWrite(LED_PIN, LOW);
+  delayMicroseconds(LOW_DURATION);
+
+  // Set the LED HIGH again for the specified duration
+  digitalWrite(LED_PIN, HIGH);
+  delayMicroseconds(SECOND_HIGH_DURATION);
+
+  // Calculate the time remaining in the cycle
+  unsigned long cycleTime = micros() - cycleStart;
+  unsigned long cycleRemaining = PERIOD - cycleTime;
+
+  // Wait for the remainder of the cycle
+  if (cycleRemaining > 0) {
+    delayMicroseconds(cycleRemaining);
+  }
+}
