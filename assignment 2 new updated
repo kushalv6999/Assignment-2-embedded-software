@@ -1,0 +1,182 @@
+#include <B31DGMonitor.h>
+
+#include<Ticker.h>
+
+B31DGCyclicExecutiveMonitor monitor; // Creating an instance of cyclic executive Monitor
+int L1_pin = 18;
+int Input1_pin = 2; 
+float Input1;
+int Input1_1;
+float Input1_read;
+int Input2_pin = 8;
+float Input2;
+int Input2_1;
+float Input2_read;
+unsigned long t1;
+unsigned long t2;
+unsigned long t3;
+unsigned long t4;
+int Ptpin= 4;
+int L2_pin = 19;
+float ptval;
+float calc_val=0;
+float P1=0;
+float P2=0;
+float P3=0;
+float P4=0;
+float ana_avg;
+float half_max;
+unsigned long frametime=0;
+unsigned long framecounter=0;
+Ticker ticker;
+
+
+void setup() {
+Serial.begin(9600);
+while(!Serial);
+Serial.println("Ready");
+
+pinMode(L1_pin ,OUTPUT);
+pinMode(Input1_pin , INPUT);
+pinMode(Input2_pin , INPUT);
+pinMode(Ptpin, INPUT);
+pinMode(L2_pin, OUTPUT);
+monitor.startMonitoring();
+cycexesch();
+ticker.attach_ms(4,cycexesch);
+}
+
+void loop() 
+{
+// put your main code here,to run repeatedly;
+//cycexesch();
+}
+void cycexesch()
+{
+ unsigned int move = framecounter % 41;
+switch(move)
+{
+     case 0:  task1();  task2();                                       break;
+     case 1:  task1();                        task4();                 break;
+     case 2:  task1();             task3();                            break;
+     case 3:  task1();                                                 break;
+     case 4:  task1();             task3();                            break;
+     case 5:  task1();  task2();                                       break;
+     case 6:  task1();             task3();                            break;
+     case 7:  task1();                        task4();                 break;
+     case 8:  task1();             task3();                            break;
+     case 9:  task1();             task3();                            break;
+     case 10: task1();  task2();                                       break;
+     case 11: task1();                        task4();                 break;
+     case 12: task1();             task3();                            break;
+     case 13: task1();                                   task5();      break;
+     case 14: task1();             task3();                            break;
+     case 15: task1();  task2();                                       break;
+     case 16: task1();             task3();                            break;
+     case 17: task1();                        task4();                 break;
+     case 19: task1();             task3();                            break;
+     case 18: task1();             task3();                            break;
+     case 20: task1();  task2();                                       break;
+     case 21: task1();                                                 break;
+     case 22: task1();             task3();                            break;
+     case 23: task1();                        task4();                 break;
+     case 24: task1();             task3();                            break;
+     case 25: task1();  task2();                                       break;
+     case 26: task1();             task3();                            break;
+     case 27: task1();                        task4();                 break;
+     case 28: task1();             task3();                            break;
+     case 29: task1();             task3();                            break;
+     case 30: task1();  task2();                                       break;
+     case 31: task1();                                                 break;
+     case 32: task1();             task3();                            break;
+     case 33: task1();                        task4();                 break;
+     case 34: task1();             task3();                            break;
+     case 35: task1();  task2();                                       break;
+     case 36: task1();             task3();                            break;
+     case 37: task1();                        task4();                 break;
+     case 38: task1();             task3();                            break;
+     case 39: task1();             task3();                            break;
+     case 40: task1();  task2();                                       break;
+}
+framecounter++;
+}
+
+    
+void task1() 
+{
+    monitor.jobStarted(1);// Notify the monitor that this task has started
+
+    digitalWrite(L1_pin, HIGH); // Turn on the LED connected to LED_PIN1
+    delayMicroseconds(200); // Delay for 200 microseconds
+
+    digitalWrite(L1_pin, LOW); // Turn off the LED
+    delayMicroseconds(50); // Delay for 50 microseconds
+
+    digitalWrite(L1_pin, HIGH); // Turn on the LED again
+    delayMicroseconds(30); // Delay for 30 microseconds
+
+    monitor.jobEnded(1); // Notify the monitor that this task has ended
+}
+
+void task2()
+{
+monitor.jobStarted(2);
+while (digitalRead(Input1_pin) == LOW);
+t1 = micros();
+while (digitalRead(Input1_pin) == HIGH);
+t2 = micros();
+Input1_read = (t2 - t1)*0.000001;
+Input1 = 1/(Input1_read*2);
+//delay(3);
+ monitor.jobEnded(2);
+}
+
+void task3()
+{
+monitor.jobStarted(3);
+while (digitalRead(Input2_pin) == LOW);
+t3 = micros();
+while (digitalRead(Input2_pin) == HIGH);
+t4 = micros();
+Input2_read = (t2 - t1)*0.000001;
+Input1 = 1/(Input2_read*2);
+//delay(3);
+ monitor.jobEnded(3);
+}
+
+void task4()
+{
+monitor.jobStarted(4);
+ptval = analogRead(Ptpin);
+calc_val = (3.3*ptval)/4095;
+P1=P2;
+P2=P3;
+P3=P4;
+P4=calc_val;
+ana_avg = (P1+P2+P3+P4)/4;
+half_max = 3.3/2;
+if(ana_avg > half_max) {digitalWrite(L2_pin,HIGH);}
+else {digitalWrite(L2_pin,LOW);}
+monitor.jobEnded(4);
+}
+
+void task5()
+{
+monitor.jobStarted(5);
+Input1_1 = 0;
+Input2_1 = 0;
+Input1_1 = ((Input1 - 333)*99)/(1000-333);
+Input2_1 = ((Input2 - 500)*99)/(1000-500);
+
+if(Input1_1<=0){Input1_1=0;}
+else if (Input1_1 > 99){Input1_1 = 99;}
+else{Input1_1 = Input1_1;}
+
+if(Input2_1<=0){Input2_1=0;}
+else if (Input2_1 > 99){Input2_1 = 99;}
+else{Input2_1 = Input2_1;}
+
+Serial.printf("%d, %d\n",Input1_1,Input2_1);
+monitor.jobEnded(5);
+}
+
